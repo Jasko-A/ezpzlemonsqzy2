@@ -2,7 +2,7 @@ public class Parser {
 
     private Symtab symtab = new Symtab();
     //public static string tempString;
-
+    int count =0;
 
     // the first sets.
     // note: we cheat sometimes:
@@ -59,9 +59,10 @@ public class Parser {
         gcprint("int esqrt(int x){ double y; if (x < 0) return 0; y = sqrt((double)x); return (int)y;}");
 
         gcprint("#include <stdio.h>");
-    modFunc(); 
+        modFunc();
+        gcprint("#define MAX(a,b) (((a)>(b))?(a):(b))");
         gcprint("int main() {");
-       
+
 	block();
         gcprint("return 0; }");
     }
@@ -144,14 +145,14 @@ public class Parser {
 
     private void stop(){
         mustbe(TK.STOP);
-        
+
         //if there are statements withing the same block
         //after the 'stop' write error message.
         if(first(f_statement)){
             System.err.println("warning: on line " + tok.lineNumber + " statement(s) follows stop statement");
         }
         gcprint("exit(0);");
-        
+
     }
 
     private void ifproc(){
@@ -286,26 +287,38 @@ public class Parser {
             gcprint(tok.string);
             scan();
         }
-        else if( is(TK.MODULO) ){
-            predef();
-
+        else if( is(TK.MODULO)) {
+            gcprint("myMod");
+            scan();
+            mustbe(TK.LPAREN);
+            gcprint("(");
+            expression();
+            mustbe(TK.COMMA);
+            gcprint(",");
+            expression();
+            mustbe(TK.RPAREN);
+            gcprint(")");
+        }
+        else if(is(TK.MAX)){
+            count++;
+            if(count > 5){
+              System.err.println("can't parse: line 2 max expressions nested too deeply (> 5 deep)");
+              System.exit(1);
+            }
+            gcprint("MAX");
+            scan();
+            mustbe(TK.LPAREN);
+            gcprint("(");
+            expression();
+            mustbe(TK.COMMA);
+            gcprint(",");
+            expression();
+            mustbe(TK.RPAREN);
+            gcprint(")");
+            count--;
         }
         else
             parse_error("factor");
-    }
-
-    private void predef() {
-        gcprint("myMod");
-        scan();
-        mustbe(TK.LPAREN);
-        gcprint("(");
-        expression();
-        mustbe(TK.COMMA);
-        gcprint(",");
-        expression();
-        mustbe(TK.RPAREN);
-        gcprint(")");
-
     }
 
 
