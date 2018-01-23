@@ -1,31 +1,26 @@
 public class Parser {
 
     private Symtab symtab = new Symtab();
-    //public static string tempString;
-    int count =0;
 
     // the first sets.
     // note: we cheat sometimes:
     // when there is only a single token in the set,
     // we generally just compare tkrep with the first token.
     TK f_declarations[] = {TK.VAR, TK.none};
-    TK f_statement[] = {TK.ID, TK.PRINT, TK.SKIP, TK.STOP, TK.IF, TK.DO, TK.FA, TK.none};
+    TK f_statement[] = {TK.ID, TK.SKIP, TK.PRINT, TK.IF, TK.DO, TK.FA, TK.none};
     TK f_print[] = {TK.PRINT, TK.none};
-    TK f_skip[] = {TK.SKIP, TK.none};
-    TK f_stop[] = {TK.STOP, TK.none};
     TK f_assignment[] = {TK.ID, TK.none};
     TK f_if[] = {TK.IF, TK.none};
     TK f_do[] = {TK.DO, TK.none};
     TK f_fa[] = {TK.FA, TK.none};
     TK f_expression[] = {TK.ID, TK.NUM, TK.LPAREN, TK.none};
-
+    TK f_skip[] = {TK.SKIP, TK.none};
     // tok is global to all these parsing methods;
     // scan just calls the scanner's scan method and saves the result in tok.
     private Token tok; // the current token
     private void scan() {
         tok = scanner.scan();
     }
-
 
     private Scan scanner;
     Parser(Scan scanner) {
@@ -36,10 +31,6 @@ public class Parser {
             parse_error("junk after logical end of program");
         symtab.reportVariables();
     }
-
-    //private void gcsave(String str) {
-    //    tempString = tempString + str;
-    //}
 
     // print something in the generated code
     private void gcprint(String str) {
@@ -53,22 +44,14 @@ public class Parser {
 
     private void program() {
         // generate the E math functions:
-        gcprint("#include <stdlib.h>");
         gcprint("int esquare(int x){ return x*x;}");
         gcprint("#include <math.h>");
         gcprint("int esqrt(int x){ double y; if (x < 0) return 0; y = sqrt((double)x); return (int)y;}");
 
         gcprint("#include <stdio.h>");
-        modFunc();
-        gcprint("#define MAX(a,b) (((a)>(b))?(a):(b))");
         gcprint("int main() {");
-
 	block();
         gcprint("return 0; }");
-    }
-
-    private void modFunc() {    //; else if(a < 0 && b < 0) return -1*((-1*a)%(-1*b))
-        gcprint("int myMod(int a, int b) {if(b==0){printf(\"\\nmod(a,b) with b=0\\n\"); exit(1);}  else if(a==0) return 0; else if(a%b==0) return 0; else if((a > 0 && b < 0) && (a%(-1*b) != 0)) return ((a%(-1*b))+b); else if((a<0 && b > 0) && ((-1*a)%b != 0)) return b-((-1*a)%b); else return (a%b); }");
     }
 
     private void block() {
@@ -106,16 +89,14 @@ public class Parser {
             assignment();
         else if( first(f_print) )
             print();
-        else if( first(f_skip) )
-            skip();
-        else if( first(f_stop) )
-            stop();
         else if( first(f_if) )
             ifproc();
         else if( first(f_do) )
             doproc();
         else if( first(f_fa) )
             fa();
+        else if( first(f_skip))
+            skip();
         else
             parse_error("statement");
     }
@@ -137,22 +118,6 @@ public class Parser {
         gcprint("printf(\"%d\\n\", ");
         expression();
         gcprint(");");
-    }
-
-    private void skip(){
-        mustbe(TK.SKIP);
-    }
-
-    private void stop(){
-        mustbe(TK.STOP);
-
-        //if there are statements withing the same block
-        //after the 'stop' write error message.
-        if(first(f_statement)){
-            System.err.println("warning: on line " + tok.lineNumber + " statement(s) follows stop statement");
-        }
-        gcprint("exit(0);");
-
     }
 
     private void ifproc(){
@@ -251,7 +216,7 @@ public class Parser {
 
     private void term(){
         factor();
-        while(  is(TK.TIMES) || is(TK.DIVIDE) || is(TK.MOD) ) {
+        while(  is(TK.TIMES) || is(TK.DIVIDE) ) {
             gcprint(tok.string);
             scan();
             factor();
@@ -287,41 +252,13 @@ public class Parser {
             gcprint(tok.string);
             scan();
         }
-        else if( is(TK.MODULO)) {
-            gcprint("myMod");
-            scan();
-            mustbe(TK.LPAREN);
-            gcprint("(");
-            expression();
-            mustbe(TK.COMMA);
-            gcprint(",");
-            expression();
-            mustbe(TK.RPAREN);
-            gcprint(")");
-        }
-        else if(is(TK.MAX)){
-            count++;
-            if(count > 5){
-              System.err.println("can't parse: line 2 max expressions nested too deeply (> 5 deep)");
-              System.exit(1);
-            }
-            gcprint("MAX");
-            scan();
-            mustbe(TK.LPAREN);
-            gcprint("(");
-            expression();
-            mustbe(TK.COMMA);
-            gcprint(",");
-            expression();
-            mustbe(TK.RPAREN);
-            gcprint(")");
-            count--;
-        }
         else
             parse_error("factor");
     }
 
-
+    private void skip() {
+      mustbe(TK.SKIP);
+    }
     // be careful: use lno here, not tok.lineNumber
     // (which may have been advanced by now)
     private void referenced_id(String id, boolean assigned, int lno) {

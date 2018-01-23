@@ -94,16 +94,12 @@ public class Scan {
                         return ccase1('+',TK.PLUS);
                     case '*':
                         return ccase1('*',TK.TIMES);
-                    case '%':
-                        return ccase1('%',TK.MOD);
                     case '=':
                         return ccase1('=',TK.EQ);
                     case '^':
                         return ccase1('^',TK.SQUARE);
                     case '@':
                         return ccase1('@',TK.SQRT);
-                    case ',':
-                        return ccase1(',',TK.COMMA);
 
 // QUESTION 3:  What does the following case and the code in it do?
 
@@ -275,9 +271,6 @@ public class Scan {
         if (str.equals("to"))        return TK.TO;
         if (str.equals("st"))        return TK.ST;
         if (str.equals("skip"))      return TK.SKIP;
-        if (str.equals("stop"))      return TK.STOP;
-        if (str.equals("mod"))       return TK.MODULO;
-        if (str.equals("max"))       return TK.MAX;
 
         // no keyword matched, so ...
         return TK.ID;

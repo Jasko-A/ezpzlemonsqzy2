@@ -16,10 +16,7 @@ public enum TK {
     AF,      // af
     TO,      // to
     ST,      // st
-    SKIP,    // skip
-    STOP,    // stop
-    MODULO,  // modulo arithmetic
-    MAX,
+    SKIP,
 
     ASSIGN,   // :=
     LPAREN,   // (
@@ -28,8 +25,6 @@ public enum TK {
     MINUS,    // -
     TIMES,    // *
     DIVIDE,   // /
-    MOD,      // %
-    COMMA,    // ,
 
     SQUARE,   // ^
     SQRT,     // @
