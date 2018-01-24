@@ -7,7 +7,7 @@ public class Parser {
     // when there is only a single token in the set,
     // we generally just compare tkrep with the first token.
     TK f_declarations[] = {TK.VAR, TK.none};
-    TK f_statement[] = {TK.ID, TK.SKIP, TK.PRINT, TK.IF, TK.DO, TK.FA, TK.none};
+    TK f_statement[] = {TK.ID, TK.SKIP, TK.STOP, TK.PRINT, TK.IF, TK.DO, TK.FA, TK.none};
     TK f_print[] = {TK.PRINT, TK.none};
     TK f_assignment[] = {TK.ID, TK.none};
     TK f_if[] = {TK.IF, TK.none};
@@ -15,6 +15,7 @@ public class Parser {
     TK f_fa[] = {TK.FA, TK.none};
     TK f_expression[] = {TK.ID, TK.NUM, TK.LPAREN, TK.none};
     TK f_skip[] = {TK.SKIP, TK.none};
+    TK f_stop[] = {TK.STOP, TK.none};
     // tok is global to all these parsing methods;
     // scan just calls the scanner's scan method and saves the result in tok.
     private Token tok; // the current token
@@ -98,8 +99,18 @@ public class Parser {
             fa();
         else if( first(f_skip))
             skip();
+        else if( first(f_stop))
+            stop();
         else
             parse_error("statement");
+    }
+
+    private void stop(){
+      mustbe(TK.STOP);
+      gcprint("exit(0);");
+      if (first(f_statement)) {
+        token_after_stop_warning();
+      }
     }
 
     private void assignment(){
@@ -217,7 +228,7 @@ public class Parser {
 
     private void term(){
         factor();
-        while(  is(TK.TIMES) || is(TK.DIVIDE) ) {
+        while(  is(TK.TIMES) || is(TK.DIVIDE) || is(TK.REMAINDER) ) {
             gcprint(tok.string);
             scan();
             factor();
@@ -260,6 +271,7 @@ public class Parser {
     private void skip() {
       mustbe(TK.SKIP);
     }
+
     // be careful: use lno here, not tok.lineNumber
     // (which may have been advanced by now)
     private void referenced_id(String id, boolean assigned, int lno) {
@@ -298,5 +310,10 @@ public class Parser {
         System.err.println( "can't parse: line "
                             + tok.lineNumber + " " + msg );
         System.exit(1);
+    }
+
+    private void token_after_stop_warning() {
+        System.err.println("warning: on line " + tok.lineNumber
+                            + " statement(s) follows stop statement");
     }
 }

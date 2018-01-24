@@ -100,6 +100,8 @@ public class Scan {
                         return ccase1('^',TK.SQUARE);
                     case '@':
                         return ccase1('@',TK.SQRT);
+                    case '%':
+                        return ccase1('%',TK.REMAINDER);
 
 // QUESTION 3:  What does the following case and the code in it do?
 
@@ -271,6 +273,7 @@ public class Scan {
         if (str.equals("to"))        return TK.TO;
         if (str.equals("st"))        return TK.ST;
         if (str.equals("skip"))      return TK.SKIP;
+        if (str.equals("stop"))      return TK.STOP;
 
         // no keyword matched, so ...
         return TK.ID;
