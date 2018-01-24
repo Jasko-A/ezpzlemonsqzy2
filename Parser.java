@@ -46,6 +46,7 @@ public class Parser {
         // generate the E math functions:
         gcprint("int esquare(int x){ return x*x;}");
         gcprint("#include <math.h>");
+        gcprint("#include <stdlib.h>");
         gcprint("int esqrt(int x){ double y; if (x < 0) return 0; y = sqrt((double)x); return (int)y;}");
 
         gcprint("#include <stdio.h>");
