@@ -277,6 +277,7 @@ public class Scan {
         if (str.equals("skip"))      return TK.SKIP;
         if (str.equals("stop"))      return TK.STOP;
         if (str.equals("mod"))       return TK.MODULO;
+        if (str.equals("max"))       return TK.MAX;
         // no keyword matched, so ...
         return TK.ID;
     }

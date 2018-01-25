@@ -19,6 +19,7 @@ public enum TK {
     SKIP,    // skip
     STOP,    // stop
     MODULO, // mod
+    MAX,    // max
 
     ASSIGN,   // :=
     LPAREN,   // (

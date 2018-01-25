@@ -2,6 +2,8 @@ public class Parser {
 
     private Symtab symtab = new Symtab();
 
+    int max_counter = 0;
+
     // the first sets.
     // note: we cheat sometimes:
     // when there is only a single token in the set,
@@ -13,7 +15,7 @@ public class Parser {
     TK f_if[] = {TK.IF, TK.none};
     TK f_do[] = {TK.DO, TK.none};
     TK f_fa[] = {TK.FA, TK.none};
-    TK f_expression[] = {TK.ID, TK.NUM, TK.LPAREN, TK.MODULO, TK.none};
+    TK f_expression[] = {TK.ID, TK.NUM, TK.LPAREN, TK.MODULO, TK.MAX, TK.none};
     TK f_skip[] = {TK.SKIP, TK.none};
     TK f_stop[] = {TK.STOP, TK.none};
     // tok is global to all these parsing methods;
@@ -52,6 +54,8 @@ public class Parser {
         gcprint("#include <stdio.h>");
 
         modFunc();
+        maxMacro();
+
         gcprint("int main() {");
 	block();
         gcprint("return 0; }");
@@ -59,6 +63,10 @@ public class Parser {
 
     private void modFunc() {    //; else if(a < 0 && b < 0) return -1*((-1*a)%(-1*b))
         gcprint("int myMod(int a, int b) {if(b==0){printf(\"\\nmod(a,b) with b=0\\n\"); exit(1);}  else if(a==0) return 0; else if(a%b==0) return 0; else if((a > 0 && b < 0) && (a%(-1*b) != 0)) return ((a%(-1*b))+b); else if((a<0 && b > 0) && ((-1*a)%b != 0)) return b-((-1*a)%b); else return (a%b); }");
+    }
+
+    private void maxMacro() {
+        gcprint("#define maxMacro(a, b) ((a>b)?a:b)");
     }
 
     private void block() {
@@ -279,6 +287,24 @@ public class Parser {
             gcprint(",");
             expression();
             mustbe(TK.RPAREN);
+            gcprint(")");
+        }
+        else if( is(TK.MAX)) {
+            if(max_counter >= 5) {
+              System.err.println("can't parse: line " + tok.lineNumber + " max expressions nested too deeply (> 5 deep)");
+              System.exit(1);
+            }
+            gcprint("maxMacro");
+            scan();
+            mustbe(TK.LPAREN);
+            max_counter++;
+            gcprint("(");
+            expression();
+            mustbe(TK.COMMA);
+            gcprint(",");
+            expression();
+            mustbe(TK.RPAREN);
+            max_counter--;
             gcprint(")");
         }
         else
