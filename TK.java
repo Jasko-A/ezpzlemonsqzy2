@@ -18,6 +18,7 @@ public enum TK {
     ST,      // st
     SKIP,    // skip
     STOP,    // stop
+    MODULO, // mod
 
     ASSIGN,   // :=
     LPAREN,   // (
@@ -27,6 +28,7 @@ public enum TK {
     TIMES,    // *
     DIVIDE,   // /
     REMAINDER,// %
+    COMMA,    // ,
 
     SQUARE,   // ^
     SQRT,     // @
