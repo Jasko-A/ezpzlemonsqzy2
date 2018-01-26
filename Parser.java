@@ -1,17 +1,23 @@
+import java.util.ArrayList;
 public class Parser {
 
     private Symtab symtab = new Symtab();
     //public static string tempString;
 
+    static int count = 0;
+    static int level = 0;
+    static int loopID = 0;
+    ArrayList<Integer> loopList = new ArrayList<Integer>();
 
     // the first sets.
     // note: we cheat sometimes:
     // when there is only a single token in the set,
     // we generally just compare tkrep with the first token.
     TK f_declarations[] = {TK.VAR, TK.none};
-    TK f_statement[] = {TK.ID, TK.PRINT, TK.SKIP, TK.STOP, TK.IF, TK.DO, TK.FA, TK.none};
+    TK f_statement[] = {TK.ID, TK.PRINT, TK.SKIP, TK.STOP, TK.IF, TK.DO, TK.FA, TK.BREAK, TK.none};
     TK f_print[] = {TK.PRINT, TK.none};
     TK f_skip[] = {TK.SKIP, TK.none};
+    TK f_break[] = {TK.BREAK, TK.none};
     TK f_stop[] = {TK.STOP, TK.none};
     TK f_assignment[] = {TK.ID, TK.none};
     TK f_if[] = {TK.IF, TK.none};
@@ -57,7 +63,7 @@ public class Parser {
         gcprint("int esquare(int x){ return x*x;}");
         gcprint("#include <math.h>");
         gcprint("int esqrt(int x){ double y; if (x < 0) return 0; y = sqrt((double)x); return (int)y;}");
-
+        gcprint("#define MAX(a,b) (((a)>(b))?(a):(b))");
         gcprint("#include <stdio.h>");
     modFunc(); 
         gcprint("int main() {");
@@ -96,6 +102,7 @@ public class Parser {
 
     private void statement_list(){
         while( first(f_statement) ) {
+
             statement();
         }
     }
@@ -111,10 +118,24 @@ public class Parser {
             stop();
         else if( first(f_if) )
             ifproc();
-        else if( first(f_do) )
+        else if( first(f_do) ){
+            loopID++;
+            loopList.add(loopID);
+            /*for(int i = 0; i < loopList.size(); i++)
+                System.out.println(loopList.get(i));*/
             doproc();
-        else if( first(f_fa) )
+        }
+            
+        else if( first(f_fa) ) {
+            loopID++;
+            loopList.add(loopID);
+            /*for(int i = 0; i < loopList.size(); i++)
+                System.out.println(loopList.get(i));*/
             fa();
+        }
+            
+        else if( first(f_break) )
+            breaker();
         else
             parse_error("statement");
     }
@@ -162,14 +183,19 @@ public class Parser {
 
     private void doproc(){
         mustbe(TK.DO);
+        level++;
         gcprint("while(1){");
         guarded_commands(TK.DO);
         gcprint("}");
         mustbe(TK.OD);
+        level--;
+        gcprint("label" + loopList.get(loopList.size()-1) + ":" + ";");
+        loopList.remove(loopList.size()-1);
     }
 
     private void fa(){
         mustbe(TK.FA);
+        level++;
         gcprint("for(");
         String id = tok.string;
         int lno = tok.lineNumber; // save it too before mustbe!
@@ -195,6 +221,46 @@ public class Parser {
         }
         commands();
         mustbe(TK.AF);
+        level--;
+
+        gcprint("label" + loopList.get(loopList.size()-1) + ":" + ";");
+        loopList.remove(loopList.size()-1);
+    }
+
+    private void breaker() {
+        int breakNum;
+        int goBack;
+        int breakLine = tok.lineNumber;
+        mustbe(TK.BREAK);
+        if(is(TK.NUM)) {
+            breakNum = Integer.parseInt(tok.string);
+            goBack = (level-breakNum);
+            scan();
+            if(breakNum == 0)
+                System.err.println("warning: on line " + breakLine + " break 0 statement ignored");
+            else if(goBack < 0) 
+                System.err.println("warning: on line " + breakLine + " break statement exceeding loop nesting ignored");
+            else if(goBack >= 0)
+            {
+                gcprint("goto label" + loopList.get(goBack) + ";");
+                if(first(f_statement)){
+                    System.err.println("warning: on line " + tok.lineNumber + " statement(s) follows break statement");
+                }
+            }
+            
+        }
+        else {
+            if(level == 0) {
+                System.err.println("warning: on line " + breakLine + " break statement outside of loop ignored");
+            }
+            else if(first(f_statement) && level > 0){
+                System.err.println("warning: on line " + tok.lineNumber + " statement(s) follows break statement");
+                gcprint("break;");
+            }
+            else
+                gcprint("break;");
+        }
+        
     }
 
     private void guarded_commands(TK which){
@@ -288,7 +354,24 @@ public class Parser {
         }
         else if( is(TK.MODULO) ){
             predef();
-
+        }
+        else if(is(TK.MAX) ){
+            count++;
+            if(count > 5) {
+                System.err.println("can't parse: line 2 max expressions nested too deeply (> 5 deep)");
+                System.exit(1);
+            }
+            gcprint("MAX");
+            scan();
+            mustbe(TK.LPAREN);
+            gcprint("(");
+            expression();
+            mustbe(TK.COMMA);
+            gcprint(",");
+            expression();
+            mustbe(TK.RPAREN);
+            gcprint(")");
+            count--;
         }
         else
             parse_error("factor");
