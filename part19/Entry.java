@@ -22,6 +22,11 @@ class Entry {
     int getLevel() {
         return level;
     }
+    int numberOfVariable(){
+      int total = 0;
+      total = assigned.size()+used.size();
+      return total;
+    }
     public void ref(boolean wasassigned, int linenumber) { // referenced
         ArrayList<AU> which;
         if (wasassigned) {

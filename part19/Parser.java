@@ -67,9 +67,9 @@ public class Parser {
         gcprint("int esqrt(int x){ double y; if (x < 0) return 0; y = sqrt((double)x); return (int)y;}");
         gcprint("#define MAX(a,b) (((a)>(b))?(a):(b))");
         gcprint("#include <stdio.h>");
-    modFunc(); 
+    modFunc();
         gcprint("int main() {");
-       
+
 	block();
         gcprint("return 0; }");
     }
@@ -127,7 +127,7 @@ public class Parser {
                 System.out.println(loopList.get(i));*/
             doproc();
         }
-            
+
         else if( first(f_fa) ) {
             loopID++;
             loopList.add(loopID);
@@ -135,7 +135,7 @@ public class Parser {
                 System.out.println(loopList.get(i));*/
             fa();
         }
-            
+
         else if( first(f_break) )
             breaker();
         else if( first(f_dump) )
@@ -169,14 +169,14 @@ public class Parser {
 
     private void stop(){
         mustbe(TK.STOP);
-        
+
         //if there are statements withing the same block
         //after the 'stop' write error message.
         if(first(f_statement)){
             System.err.println("warning: on line " + tok.lineNumber + " statement(s) follows stop statement");
         }
         gcprint("exit(0);");
-        
+
     }
 
     private void ifproc(){
@@ -242,7 +242,7 @@ public class Parser {
             scan();
             if(breakNum == 0)
                 System.err.println("warning: on line " + breakLine + " break 0 statement ignored");
-            else if(goBack < 0) 
+            else if(goBack < 0)
                 System.err.println("warning: on line " + breakLine + " break statement exceeding loop nesting ignored");
             else if(goBack >= 0)
             {
@@ -251,7 +251,7 @@ public class Parser {
                     System.err.println("warning: on line " + tok.lineNumber + " statement(s) follows break statement");
                 }
             }
-            
+
         }
         else {
             if(level == 0) {
@@ -264,7 +264,7 @@ public class Parser {
             else
                 gcprint("break;");
         }
-        
+
     }
 
     private void dump() {
@@ -272,49 +272,71 @@ public class Parser {
         int dumpNum;
         int tempLineNum = tok.lineNumber;
         mustbe(TK.DUMP);
-        
+
         int currLineNum = tok.lineNumber;
         if(is(TK.NUM)) {
             ArrayList<Entry> a = symtab.returnList();
             dumpNum = Integer.parseInt(tok.string); //sets token to dumpNum int
             scan();
-            if(dumpNum == 0 || dumpNum > a.size()) {
+            if(dumpNum == 0) {
                 gcprint("printf(\"+++ dump on line " + currLineNum + " of level 0 begin +++\\n\");");
-                    for(int j = 0; j == a.size(); j++) {
-                        if(a.get(j).getLevel() == dumpNum) {
-                            gcprint("printf(\"%12d %3d %3d %s\\n\", x_" + a.get(j).getName() + "," + a.get(j).getLine() + "," + a.get(j).getLevel() + "," + "\"" + a.get(j).getName() + "\""  + ");");
-                        }
-                    }
-                gcprint("printf(\"--- dump on line " + currLineNum + " of level 0 end ---\\n\");");
                 if(dumpNum > a.size()) {
-
-                    System.err.println("warning: on line " + currLineNum + " dump statement level (" + dumpNum +") exceeds block nesting level (" + a.size() + "). using 0");
-                    
+                    System.err.println("warning: on line " + currLineNum + " dump statement level (" + dumpNum +") exceeds block nesting level (" + level + "). using 0");
                 }
-            
-            }       
+
+                // if(a.size() > 0)
+                // for(int i = 0; i < a.get(0).numberOfVariable(); i++) {
+                //     // for(int j = 0; j < a.get(i).numberOfVariable(); j++)
+                //       //string x = a[i].linenumber + " " + a[i].level + " " + a[i].name;
+                //       gcprint("printf(\"%12d %3d %3d %s\\n\", x_" + a.get(i).getName() + "," + a.get(i).getLine() + "," + a.get(i).getLevel() + "," + "\"" + a.get(i).getName() + "\""  + ");");
+                // }
+                for(int j = 0; j < a.size(); j++) {
+                       if(a.get(j).getLevel() == dumpNum) {
+                           gcprint("printf(\"%12d %3d %3d %s\\n\", x_" + a.get(j).getName() + "," + a.get(j).getLine() + "," + a.get(j).getLevel() + "," + "\"" + a.get(j).getName() + "\""  + ");");
+                       }
+                }
+
+                gcprint("printf(\"--- dump on line " + currLineNum + " of level 0 end ---\\n\");");
+
+            }
+            else if( dumpNum > a.size() ){
+              gcprint("printf(\"+++ dump on line " + currLineNum + " of level 0 begin +++\\n\");");
+              if(dumpNum > a.size()) {
+                  System.err.println("warning: on line " + currLineNum + " dump statement level (" + dumpNum +") exceeds block nesting level (" + level + "). using 0");
+              }
+
+              for(int j = 0; j < a.size(); j++) {
+                     // if(a.get(j).getLevel() == dumpNum) {
+                         gcprint("printf(\"%12d %3d %3d %s\\n\", x_" + a.get(j).getName() + "," + a.get(j).getLine() + "," + a.get(j).getLevel() + "," + "\"" + a.get(j).getName() + "\""  + ");");
+
+              }
+
+              gcprint("printf(\"--- dump on line " + currLineNum + " of level 0 end ---\\n\");");
+            }
             else {
                 gcprint("printf(\"+++ dump on line " + currLineNum + " of level " + dumpNum + " begin +++\\n\");");
+
                 for(int j = 0; j < a.size(); j++) {
-                    if(a.get(j).getLevel() == dumpNum) {
-                        gcprint("printf(\"%12d %3d %3d %s\\n\", x_" + a.get(j).getName() + "," + a.get(j).getLine() + "," + a.get(j).getLevel() + "," + "\"" + a.get(j).getName() + "\""  + ");");
-                    }
+                       if(a.get(j).getLevel() == dumpNum) {
+                           gcprint("printf(\"%12d %3d %3d %s\\n\", x_" + a.get(j).getName() + "," + a.get(j).getLine() + "," + a.get(j).getLevel() + "," + "\"" + a.get(j).getName() + "\""  + ");");
+                       }
                 }
                 gcprint("printf(\"--- dump on line " + currLineNum + " of level " + dumpNum + " end ---\\n\");");
             }
-            
         }
         else {
             ArrayList<Entry> a = symtab.returnList();
+
             gcprint("printf(\"+++ dump on line " + tempLineNum + " of all levels begin +++\\n\");");
-            
+// i < a.get(i).numberOfVariable() ||
+            // if(a.size() > 0)
+
             for(int i = 0; i < a.size(); i++) {
-                //string x = a[i].linenumber + " " + a[i].level + " " + a[i].name;
-                gcprint("printf(\"%12d %3d %3d %s\\n\", x_" + a.get(i).getName() + "," + a.get(i).getLine() + "," + a.get(i).getLevel() + "," + "\"" + a.get(i).getName() + "\""  + ");");
+               //string x = a[i].linenumber + " " + a[i].level + " " + a[i].name;
+               gcprint("printf(\"%12d %3d %3d %s\\n\", x_" + a.get(i).getName() + "," + a.get(i).getLine() + "," + a.get(i).getLevel() + "," + "\"" + a.get(i).getName() + "\""  + ");");
             }
-            gcprint("printf(\"--- dump on line " + tempLineNum + " of all levels end ---\\n\");");            
+            gcprint("printf(\"--- dump on line " + tempLineNum + " of all levels end ---\\n\");");
         }
-        
 
     }
 
